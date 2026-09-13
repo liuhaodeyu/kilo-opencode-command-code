@@ -63,6 +63,9 @@ globalThis.fetch = async (url) => {
   return new Response(DOCS_HTML, { status: 200 });
 };
 
+// 插件只在“已连接”时注册模型；测试里用环境变量模拟已连接。
+process.env.CMD_API_KEY = "test-env-key";
+
 const { CommandCode } = await import("../index.js");
 const plugin = await CommandCode();
 const config = {};
@@ -118,5 +121,30 @@ test("reads the API key from CMD_API_KEY when no stored auth exists", async () =
   } finally {
     if (previous === undefined) delete process.env.CMD_API_KEY;
     else process.env.CMD_API_KEY = previous;
+  }
+});
+
+test("does not register models until the user has connected", async () => {
+  const names = [
+    "CMD_API_KEY",
+    "COMMANDCODE_API_KEY",
+    "COMMAND_CODE_API_KEY",
+    "CMDCODE_API_KEY",
+  ];
+  const previous = Object.fromEntries(names.map((n) => [n, process.env[n]]));
+  for (const n of names) delete process.env[n];
+  try {
+    const config = {};
+    await plugin.config(config);
+    assert.equal(config.provider.cmdcode.models, undefined);
+    assert.equal(
+      config.provider.cmdcode.options.baseURL,
+      "https://api.commandcode.ai/provider/v1"
+    );
+  } finally {
+    for (const n of names) {
+      if (previous[n] === undefined) delete process.env[n];
+      else process.env[n] = previous[n];
+    }
   }
 });

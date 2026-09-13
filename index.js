@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -266,15 +267,63 @@ function envApiKey() {
   return undefined;
 }
 
+/**
+ * 判断当前运行在哪个客户端：Kilo 还是 OpenCode。
+ * 两者的登录凭据库是分开的，必须知道该读哪一个，否则会把另一个客户端的
+ * 登录状态误当成已连接。只认进程可执行文件路径（对环境变量和参数都免疫：
+ * 在 Kilo 里启动 OpenCode 会同时带上 KILO=1，argv 也可能含插件路径）。
+ */
+function detectClient() {
+  const probe = (process.execPath || "").toLowerCase();
+  if (probe.includes("opencode")) return "opencode";
+  if (probe.includes("kilo")) return "kilo";
+  return null;
+}
+
+/** 当前客户端可能的 auth.json 位置（跨平台）。 */
+function authFileCandidates(app) {
+  const home = os.homedir();
+  const roots = [];
+  if (process.env.XDG_DATA_HOME) roots.push(process.env.XDG_DATA_HOME);
+  if (process.platform === "win32") {
+    if (process.env.APPDATA) roots.push(process.env.APPDATA);
+    if (process.env.LOCALAPPDATA) roots.push(process.env.LOCALAPPDATA);
+  } else if (process.platform === "darwin") {
+    roots.push(path.join(home, "Library", "Application Support"));
+  }
+  roots.push(path.join(home, ".local", "share"));
+  return roots.map((root) => path.join(root, app, "auth.json"));
+}
+
+/** 从当前客户端的凭据库里读 cmdcode 的 key；没有则返回 undefined。 */
+function storedApiKey() {
+  const client = detectClient();
+  if (!client) return undefined;
+  for (const file of authFileCandidates(client)) {
+    const entry = readJson(file)?.cmdcode;
+    const key = typeof entry === "string" ? entry : entry?.key;
+    if (key && key.trim()) return key.trim();
+  }
+  return undefined;
+}
+
+/** 当前是否已连接 Command Code：环境变量优先，其次凭据库。 */
+function resolveApiKey() {
+  return envApiKey() ?? storedApiKey();
+}
+
 async function loadAuthOptions(getAuth) {
-  let stored;
+  let fromStore;
   try {
     const auth = await getAuth();
-    stored = typeof auth === "string" ? auth : auth?.key;
+    fromStore = typeof auth === "string" ? auth : auth?.key;
   } catch {}
   const options = { baseURL: BASE_URL };
-  // 环境变量显式优先；未设置时回退到凭据库中登录保存的 key。
-  const apiKey = envApiKey() ?? (stored && stored.trim() ? stored.trim() : undefined);
+  // 环境变量 > 客户端传入的凭据 > 直接读凭据库。
+  const apiKey =
+    envApiKey() ??
+    (fromStore && fromStore.trim() ? fromStore.trim() : undefined) ??
+    storedApiKey();
   if (apiKey) options.apiKey = apiKey;
   return options;
 }
@@ -291,11 +340,18 @@ export const CommandCode = async () => ({
     if (!cmdcode.name) cmdcode.name = "Command Code";
     const opts = (cmdcode.options ??= {});
     if (!opts.baseURL) opts.baseURL = BASE_URL;
-    // 环境变量可直接作为 apiKey 注入（无需 kilo auth login）。
-    if (!opts.apiKey) {
-      const envKey = envApiKey();
-      if (envKey) opts.apiKey = envKey;
+
+    // 清理旧版遗留的静态 cmdcode-claude provider（若有）。
+    delete provider["cmdcode-claude"];
+
+    // 未连接（没有 API key）时不注册任何模型，/models 里就不会出现 cmdcode。
+    // provider 与 auth 入口仍保留，用户可通过 /connect 或 kilo auth login 连接。
+    const apiKey = resolveApiKey();
+    if (!apiKey) {
+      delete cmdcode.models;
+      return;
     }
+    if (!opts.apiKey) opts.apiKey = apiKey;
 
     // 用户写在配置里的 provider.cmdcode.models 优先级更高：
     // 同 id 的用户条目与自动推断结果做“条目内顶层键合并”，
@@ -313,9 +369,6 @@ export const CommandCode = async () => ({
       merged[id] = base ? { ...base, ...entry } : entry;
     }
     if (items || Object.keys(userModels).length > 0) cmdcode.models = merged;
-
-    // 清理旧版遗留的静态 cmdcode-claude provider（若有）。
-    delete provider["cmdcode-claude"];
   },
   auth: {
     provider: "cmdcode",

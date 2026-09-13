@@ -55,6 +55,8 @@ CMD_API_KEY=sk-xxxx opencode
 
 重启客户端生效。
 
+> 未连接（没有 API key）时不会显示任何 cmdcode 模型；连接并重启后才会出现。
+
 ### 3. 使用
 
 - **选模型**：打开 `/models`（或 `ctrl+x m`）→ 按 **`ctrl+a`** 打开 provider 列表 → 选 **Command Code** → 选模型
@@ -65,6 +67,7 @@ CMD_API_KEY=sk-xxxx opencode
 ## 功能
 
 - **双端兼容**：同一份 `index.js`，Kilo 和 OpenCode 都能用
+- **连接后才显示**：未配置 API key（环境变量或登录）时，`/models` 里不会出现任何 cmdcode 模型；连接后才出现，避免列出用不了的模型
 - **模型自动同步**：启动时拉取 `/provider/v1/models`，断网走本地缓存，统一 `cmdcode` 入口
 - **能力自动同步**：从官方模型表抓取每个模型的 `Text / Vision / Reasoning` 标注，自动声明 `modalities` 与 `reasoning`
   - 视觉模型可正常接收图片（修复 "does not support image input"）
