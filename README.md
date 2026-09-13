@@ -1,5 +1,9 @@
 # kilo-opencode-command-code
 
+[![CI](https://github.com/moyu-by/kilo-opencode-command-code/actions/workflows/ci.yml/badge.svg)](https://github.com/moyu-by/kilo-opencode-command-code/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/kilo-opencode-command-code.svg)](https://www.npmjs.com/package/kilo-opencode-command-code)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 **一个插件，同时接入 [Kilo](https://kilo.ai) 与 [OpenCode](https://opencode.ai) 的 [Command Code Provider API](https://commandcode.ai/docs/provider)。**
 
 同一份 `index.js` 兼容 Kilo 与 OpenCode 两套插件 API；跨平台（Windows / macOS / Linux），零第三方依赖，纯 ESM。
@@ -19,7 +23,23 @@
 
 ## 安装
 
-### 一键安装（Kilo + OpenCode）
+### 通过 npm（无需克隆）
+
+Kilo 与 OpenCode 的 `plugin` 字段都支持 npm 包名，装好后会自动安装/更新：
+
+```jsonc
+// Kilo: ~/.config/kilo/kilo.jsonc
+"plugin": ["kilo-opencode-command-code"]
+```
+
+```jsonc
+// OpenCode: ~/.config/opencode/opencode.json
+"plugin": ["kilo-opencode-command-code"]
+```
+
+然后照常登录（见下）。
+
+### 从源码一键安装（Kilo + OpenCode）
 
 Linux / macOS（或 Windows 的 Git-Bash / WSL）：
 
@@ -138,6 +158,8 @@ opencode auth login
 index.js            插件主文件（Kilo 与 OpenCode 共用）
 install.sh          Linux/macOS/Git-Bash 安装脚本（同步到 OpenCode）
 install.ps1         Windows PowerShell 安装脚本
+test/               node:test 测试
+.github/workflows/  CI 与发布流程
 .cache.json         模型列表缓存（运行时自动生成，已 gitignore）
 .capabilities.json  能力表缓存（运行时自动生成，7 天有效期，已 gitignore）
 ```
@@ -146,6 +168,34 @@ install.ps1         Windows PowerShell 安装脚本
 
 - 插件零第三方依赖、纯 ESM；`import.meta.dirname` 不可用时自动回退 `fileURLToPath`，跨平台安全。
 - 缓存文件生成在插件文件同目录，因此该目录需要可写。
+
+## 发布与 CI/CD
+
+- `.github/workflows/ci.yml`：push / PR 时在 Node 20、22 上执行 `node --check` 与 `node --test`。
+- `.github/workflows/release.yml`：推送 `v*` tag 时校验 tag 与 `package.json` 版本一致、跑测试，然后 `npm publish --provenance --access public`。
+
+本地开发：
+
+```bash
+npm run check   # 语法检查
+npm test        # 运行测试
+```
+
+首次发布（手动）：
+
+```bash
+npm login
+npm publish --access public
+```
+
+在 CI 中发布前，先在 GitHub 仓库添加 Secret `NPM_TOKEN`（npm → Access Tokens → 生成 Automation Token，或带 publish 权限的 Granular Token）。之后用 tag 触发：
+
+```bash
+npm version patch        # 或 minor / major，会创建 vX.Y.Z tag
+git push --follow-tags   # 推送提交与 tag，触发 Release 工作流
+```
+
+> 可选：npm 已支持 Trusted Publishing（OIDC，无需长期 token）。在 npm 包设置里绑定本仓库与 `release.yml` 后，删掉 workflow 里的 `NODE_AUTH_TOKEN` 即可。`--provenance` 需要仓库公开且 `id-token: write`（已配置）。
 
 ## License
 
