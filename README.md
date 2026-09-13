@@ -10,7 +10,14 @@
 
 ### 1. 安装
 
-**方式 A：npm（最简单，只加一行配置）**
+**方式 A：命令行安装（最简单，一条命令，自动写入配置）**
+
+```bash
+kilo plugin kilo-opencode-command-code -g       # Kilo
+opencode plugin kilo-opencode-command-code -g   # OpenCode
+```
+
+**方式 B：手动加一行配置**
 
 ```jsonc
 // Kilo：~/.config/kilo/kilo.jsonc
@@ -22,7 +29,7 @@
 "plugin": ["kilo-opencode-command-code"]
 ```
 
-**方式 B：克隆 + 一键脚本（Kilo 和 OpenCode 一起装）**
+**方式 C：克隆 + 一键脚本（无需 npm，Kilo 和 OpenCode 一起装）**
 
 ```bash
 git clone https://github.com/moyu-by/kilo-opencode-command-code.git
@@ -50,7 +57,7 @@ CMD_API_KEY=sk-xxxx opencode
 
 ### 3. 使用
 
-- **选模型**：Kilo 按 `ctrl+x m` 或输入 `/models`，搜索 `cmdcode/`
+- **选模型**：打开 `/models`（或 `ctrl+x m`）→ 按 **`ctrl+a`** 打开 provider 列表 → 选 **Command Code** → 选模型
 - **直接运行**：`kilo run -m cmdcode/deepseek/deepseek-v4.1-flash "你的问题"`
 - **思考档位**：选模型后挑变体 `low / medium / high`；Claude 为 `thinking-on / thinking-off`
 - **图片**：视觉模型（如 `cmdcode/deepseek/deepseek-v4.1-flash`）可直接粘贴/上传
@@ -66,28 +73,6 @@ CMD_API_KEY=sk-xxxx opencode
 - **Claude 自动路由**：Claude 走 Anthropic Messages 端点，其余走 OpenAI Chat Completions
 - **零配置即用**：装好 + 登录一次即可；环境变量可免登录
 - **可手动覆盖**：按需覆盖单个模型的模态/参数，无需改插件
-
-## 手动安装（方式 B 的可选替代）
-
-Kilo，任选其一（不要同时用，避免 provider 重复注册）：
-
-```jsonc
-// ~/.config/kilo/kilo.jsonc 的 plugin 数组
-"plugin": ["file:///绝对路径/kilo-opencode-command-code"]
-```
-
-```bash
-# 放进 Kilo 全局插件目录
-mkdir -p ~/.config/kilo/plugins
-cp index.js ~/.config/kilo/plugins/command-code.js
-```
-
-OpenCode（从 `~/.config/opencode/plugins/` 或项目的 `.opencode/plugins/` 自动加载）：
-
-```bash
-mkdir -p ~/.config/opencode/plugins
-cp index.js ~/.config/opencode/plugins/command-code.js
-```
 
 ## 环境变量
 
