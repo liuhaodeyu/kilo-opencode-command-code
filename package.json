@@ -1,0 +1,34 @@
+{
+  "name": "kilo-opencode-command-code",
+  "version": "1.1.0",
+  "description": "Command Code Provider API plugin for Kilo and OpenCode — auto-syncs models and capabilities (vision/reasoning), handles auth, routes Claude via the Anthropic Messages endpoint",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "install.sh",
+    "install.ps1",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "kilo",
+    "opencode",
+    "command-code",
+    "commandcode",
+    "plugin",
+    "provider",
+    "ai",
+    "llm"
+  ],
+  "author": "moyu-by",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moyu-by/kilo-opencode-command-code.git"
+  },
+  "homepage": "https://github.com/moyu-by/kilo-opencode-command-code#readme",
+  "bugs": {
+    "url": "https://github.com/moyu-by/kilo-opencode-command-code/issues"
+  }
+}
