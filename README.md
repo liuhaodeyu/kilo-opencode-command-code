@@ -128,24 +128,6 @@ test/               node:test 测试
 .capabilities.json  能力表缓存（运行时自动生成，7 天有效期，已 gitignore）
 ```
 
-## 发布与 CI/CD
-
-- `.github/workflows/ci.yml`：push / PR 时在 Node 20、22 上执行 `node --check` 与 `node --test`。
-- `.github/workflows/release.yml`：推送 `v*` tag 时校验 tag 与 `package.json` 版本一致、跑测试，然后 `npm publish --provenance --access public`。
-
-本地开发与发布：
-
-```bash
-npm run check                  # 语法检查
-npm test                       # 运行测试
-npm login && npm publish --access public   # 首次手动发布
-npm version patch && git push --follow-tags # 之后用 tag 触发 CI 发布
-```
-
-CI 发布需在仓库 Secrets 添加 `NPM_TOKEN`（npm Automation Token，或带 publish 权限的 Granular Token）。
-
-> 可选：npm 已支持 Trusted Publishing（OIDC，无需长期 token）。在 npm 包设置里绑定本仓库与 `release.yml` 后，删掉 workflow 里的 `NODE_AUTH_TOKEN` 即可。
-
 ## 说明
 
 - 插件零第三方依赖、纯 ESM；`import.meta.dirname` 不可用时自动回退 `fileURLToPath`，跨平台安全。
