@@ -216,6 +216,7 @@ function buildModels(items, capIndex) {
       const entry = {
         name,
         reasoning: caps.reasoning,
+        attachment: caps.vision,
         limit: { context, output: 64000 },
         modalities,
         provider: { npm: "@ai-sdk/anthropic" },
@@ -231,6 +232,7 @@ function buildModels(items, capIndex) {
       const entry = {
         name,
         reasoning: caps.reasoning,
+        attachment: caps.vision,
         limit: { context, output: 32000 },
         modalities,
       };

@@ -99,6 +99,8 @@ test("derives vision modality from the official capability table", () => {
   assert.deepEqual(models["deepseek/deepseek-v4-flash"].modalities.input, [
     "text",
   ]);
+  assert.equal(models["deepseek/deepseek-v4.1-flash"].attachment, true);
+  assert.equal(models["deepseek/deepseek-v4-flash"].attachment, false);
 });
 
 test("routes Claude models to the Anthropic endpoint with thinking variants", () => {
